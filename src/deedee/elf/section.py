@@ -20,9 +20,6 @@ class ElfSection:
 
 class ElfSectionStrtab(ElfSection):
 
-    def __init__(self, buffer, hdr):
-        super().__init__(buffer, hdr)
-
     def get_str(self, offset):
         size = self.data[offset:].index(b'\x00')
         return self.data[offset:offset+size].decode()
