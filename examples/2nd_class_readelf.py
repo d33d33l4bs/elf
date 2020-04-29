@@ -9,10 +9,7 @@ if __name__ == '__main__':
     path   = parser.add_argument('path')
     args   = parser.parse_args()
 
-    with open(args.path, 'rb') as f:
-        data = f.read()
-
-    e = elf.Elf(data)
+    e = elf.Elf.from_path(args.path)
 
     print('machine:', e.machine.name)
     print('entry:', hex(e.entry))
