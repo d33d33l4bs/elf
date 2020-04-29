@@ -1,5 +1,6 @@
 
 from .definitions import *
+from .symbol      import load_symbol
 
 
 class ElfSection:
@@ -25,8 +26,24 @@ class ElfSectionStrtab(ElfSection):
         return self.data[offset:offset+size].decode()
 
 
+class ElfSectionSymtab(ElfSection):
+
+    def __init__(self, buffer, hdr):
+        super().__init__(buffer, hdr)
+        self.symbols = [
+            load_symbol(buffer, offset, self.entsize)
+            for offset in range(
+                self.offset,
+                self.size,
+                self.entsize
+            )
+        ]
+
+
 SECTIONS_TAB = {
-    ElfSectionType.STRTAB: ElfSectionStrtab
+    ElfSectionType.STRTAB: ElfSectionStrtab,
+    ElfSectionType.SYMTAB: ElfSectionSymtab,
+    ElfSectionType.DYNSYM: ElfSectionSymtab
 }
 
 
