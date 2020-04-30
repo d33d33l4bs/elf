@@ -1,3 +1,4 @@
 
-from .elf import *
+from .elf         import Elf
+from .definitions import *
 

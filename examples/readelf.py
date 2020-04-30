@@ -1,7 +1,8 @@
 
 import argparse
 
-import deedee.elf as elf
+from deedee.elf             import Elf
+from deedee.elf.definitions import ElfSectionType
 
 
 if __name__ == '__main__':
@@ -9,20 +10,27 @@ if __name__ == '__main__':
     path   = parser.add_argument('path')
     args   = parser.parse_args()
 
-    e = elf.Elf.from_path(args.path)
+    elf = Elf.from_path(args.path)
 
-    print('machine:', e.machine.name)
-    print('entry:', hex(e.entry))
+    print('machine:', elf.machine.name)
+    print('entry:', hex(elf.entry))
 
-    print(f'segments ({len(e.segments)}):')
-    for n, segment in enumerate(e.segments):
+    print(f'segments ({len(elf.segments)}):')
+    for n, segment in enumerate(elf.segments):
         print(f'    - {n}: {segment.type.name}')
 
-    print(f'sections ({len(e.sections)}):')
-    for name, section in e.sections.items():
-        print(f'    - {name}: {section.type.name}')
+    print(f'sections ({len(elf.sections)}):')
+    for section in elf.sections:
+        print(f'    - {section.name}: {section.type.name}')
 
     print('section to segment mappings:')
-    for n, segment in enumerate(e.segments):
-        print(f'    - {n}: {", ".join(segment.sections.keys())}')
+    for n, segment in enumerate(elf.segments):
+        sections = ', '.join(s.name for s in segment.sections)
+        print(f'    - {n}: {sections}')
+
+    print('symbols:')
+    for section in elf.get_sections(lambda s: s.type == ElfSectionType.SYMTAB or s.type == ElfSectionType.DYNSYM):
+        print(f'  - {section.name}:')
+        for symbol in section.symbols:
+            print(f'    - {symbol.name}')
 

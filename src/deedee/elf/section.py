@@ -6,17 +6,32 @@ from .symbol      import load_symbol
 class ElfSection:
 
     def __init__(self, buffer, hdr):
-        self.hdr   = hdr
-        self.type  = ElfSectionType(hdr.sh_type)
-        self.flags = ElfSectionFlags(hdr.sh_flags)
-        self.name  = ''
-        if self.type == ElfSectionType.NOBITS:
-            self.data = b''
-        else:
-            self.data = buffer[hdr.sh_offset:hdr.sh_offset+hdr.sh_size]
+        self.hdr     = hdr
+        self.type    = ElfSectionType(hdr.sh_type)
+        self.flags   = ElfSectionFlags(hdr.sh_flags)
+        self.data    = self.__get_data(buffer)
+        self.name    = ''
+        self.segment = None
 
     def __getattr__(self, name):
         return getattr(self.hdr, f'sh_{name}')
+
+    def __get_data(self, buffer):
+        if self.type == ElfSectionType.NOBITS:
+            return b''
+        start = self.offset
+        stop  = self.offset + self.size
+        return buffer[start:stop]
+
+    def post_init(self, elf):
+        # Sets the name of the section.
+        if elf.shstrndx != ElfSectionIndice.UNDEF:
+            if elf.shstrndx == ElfSectionIndice.XINDEX:
+                index = elf.sections[0].sh_link
+            else:
+                index = elf.shstrndx
+            strtab    = elf.sections[index]
+            self.name = strtab.get_str(self.hdr.sh_name)
 
 
 class ElfSectionStrtab(ElfSection):
@@ -38,6 +53,12 @@ class ElfSectionSymtab(ElfSection):
                 self.entsize
             )
         ]
+
+    def post_init(self, elf):
+        super().post_init(elf)
+        strtab = elf.sections[self.link]
+        for symbol in self.symbols:
+            symbol.name = strtab.get_str(symbol.hdr.st_name)
 
 
 SECTIONS_TAB = {
