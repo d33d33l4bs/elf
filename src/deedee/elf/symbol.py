@@ -12,6 +12,9 @@ class ElfSymbol:
         self.name       = ''
         self.section    = None
 
+    def __getattr__(self, name):
+        return getattr(self.hdr, f'st_{name}')
+
 
 def load_symbol(buffer, offset, size):
     raw_hdr = buffer[offset:offset+size]
